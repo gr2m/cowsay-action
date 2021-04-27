@@ -1,4 +1,4 @@
-name: Cowsay
+name: Cowsay (JS)
 description: "The cowsay GitHub Action written in JavaScript"
 branding:
   icon: "message-square"
