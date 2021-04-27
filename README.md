@@ -18,6 +18,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: gr2m/cowsay-action@v1.x
+        with:
+          text: "Hello"
+```
+
+Will log
+
+```
+ _______
+< Hello >
+ -------
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
 ```
 
 ## License
