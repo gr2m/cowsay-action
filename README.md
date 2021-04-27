@@ -2,7 +2,7 @@
 
 > The cowsay GitHub Action written in JavaScript
 
-[![Build Status](https://github.com/octokit/cowsay-action/workflows/Test/badge.svg)](https://github.com/octokit/cowsay-action/actions)
+[![Build Status](https://github.com/gr2m/cowsay-action/workflows/Test/badge.svg)](https://github.com/gr2m/cowsay-action/actions)
 
 ## Usage
 
