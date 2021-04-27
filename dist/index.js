@@ -395,6 +395,450 @@ exports.toCommandValue = toCommandValue;
 
 /***/ }),
 
+/***/ 726:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+var baloon = __nccwpck_require__(231);
+var cows = __nccwpck_require__(228);
+var faces = __nccwpck_require__(57);
+
+exports.say = function (options) {
+	return doIt(options, true);
+};
+
+exports.think = function (options) {
+	return doIt(options, false);
+};
+
+exports.list = cows.list;
+
+function doIt (options, sayAloud) {
+	var cowFile;
+
+	if (options.r) {
+		var cowsList = cows.listSync();
+		cowFile = cowsList[Math.floor(Math.random() * cowsList.length)];
+	} else {
+		cowFile = options.f || "default";
+	}
+
+	var cow = cows.get(cowFile);
+	var face = faces(options);
+	face.thoughts = sayAloud ? "\\" : "o";
+
+	var action = sayAloud ? "say" : "think";
+	return baloon[action](options.text || options._.join(" "), options.n ? null : options.W) + "\n" + cow(face);
+}
+
+
+/***/ }),
+
+/***/ 231:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+var stringWidth = __nccwpck_require__(826);
+
+exports.say = function (text, wrap) {
+	var delimiters = {
+		first : ["/", "\\"],
+		middle : ["|", "|"],
+		last : ["\\", "/"],
+		only : ["<", ">"]
+	};
+
+	return format(text, wrap, delimiters);
+}
+
+exports.think = function (text, wrap) {
+	var delimiters = {
+		first : ["(", ")"],
+		middle : ["(", ")"],
+		last : ["(", ")"],
+		only : ["(", ")"]
+	};
+
+	return format(text, wrap, delimiters);
+}
+
+function format (text, wrap, delimiters) {
+	var lines = split(text, wrap);
+	var maxLength = max(lines);
+
+	var balloon;
+	if (lines.length === 1) {
+		balloon = [
+			" " + top(maxLength),
+			delimiters.only[0] + " " + lines[0] + " " + delimiters.only[1],
+			" " + bottom(maxLength)
+		];
+	} else {
+		balloon = [" " + top(maxLength)];
+
+		for (var i = 0, len = lines.length; i < len; i += 1) {
+			var delimiter;
+
+			if (i === 0) {
+				delimiter = delimiters.first;
+			} else if (i === len - 1) {
+				delimiter = delimiters.last;
+			} else {
+				delimiter = delimiters.middle;
+			}
+
+			balloon.push(delimiter[0] + " " + pad(lines[i], maxLength) + " " + delimiter[1]);
+		}
+
+		balloon.push(" " + bottom(maxLength));
+	}
+
+	return balloon.join("\n");
+}
+
+function split (text, wrap) {
+	text = text.replace(/\r\n?|[\n\u2028\u2029]/g, "\n").replace(/^\uFEFF/, '').replace(/\t/g, '        ');
+
+	var lines = [];
+	if (!wrap) {
+		lines = text.split("\n");
+	} else {
+		var start = 0;
+		while (start < text.length) {
+			var nextNewLine = text.indexOf("\n", start);
+
+			var wrapAt = Math.min(start + wrap, nextNewLine === -1 ? text.length : nextNewLine);
+
+			lines.push(text.substring(start, wrapAt));
+			start = wrapAt;
+
+			// Ignore next new line
+			if (text.charAt(start) === "\n") {
+				start += 1;
+			}
+		}
+	}
+
+	return lines;
+}
+
+function max (lines) {
+	var max = 0;
+	for (var i = 0, len = lines.length; i < len; i += 1) {
+		if (stringWidth(lines[i]) > max) {
+			max = stringWidth(lines[i]);
+		}
+	}
+
+	return max;
+}
+
+function pad (text, length) {
+	return text + (new Array(length - stringWidth(text) + 1)).join(" ");
+}
+
+function top (length) {
+	return new Array(length + 3).join("_");
+}
+
+function bottom (length) {
+	return new Array(length + 3).join("-");
+}
+
+
+/***/ }),
+
+/***/ 228:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+var path = __nccwpck_require__(622);
+var fs = __nccwpck_require__(747);
+var replacer = __nccwpck_require__(6);
+
+var textCache = {};
+var cowsPath = __nccwpck_require__.ab + "cows";
+
+function cowNamesFromFiles (files) {
+	return files.map(function (cow) {
+		return path.basename(cow, ".cow");
+	});
+}
+
+exports.get = function (cow) {
+	var text = textCache[cow];
+
+	if (!text) {
+		var filePath;
+
+		if (cow.match(/\\/) || cow.match(/\//)) {
+			filePath = cow;
+		} else {
+			filePath = __nccwpck_require__.ab + "cows/" + cow + '.cow';
+		}
+		text = fs.readFileSync(filePath, "utf-8");
+		textCache[cow] = text;
+	}
+
+	return function (options) {
+		return replacer(text, options);
+	};
+}
+
+exports.list = function (callback) {
+	return new Promise(function (resolve, reject) {
+		fs.readdir(__nccwpck_require__.ab + "cows", function (err, files) {
+			if (err) {
+				reject(err);
+				callback(err);
+			} else {
+				resolve(files);
+				callback(null, cowNamesFromFiles(files));
+			}
+		});
+	});
+}
+
+exports.listSync = function () {
+	return cowNamesFromFiles(fs.readdirSync(__nccwpck_require__.ab + "cows"))
+}
+
+
+/***/ }),
+
+/***/ 57:
+/***/ ((module) => {
+
+var modes = {
+	"b" : {
+		eyes : "==",
+		tongue : "  "
+	},
+	"d" : {
+		eyes : "xx",
+		tongue : "U "
+	},
+	"g" : {
+		eyes : "$$",
+		tongue : "  "
+	},
+	"p" : {
+		eyes : "@@",
+		tongue : "  "
+	},
+	"s" : {
+		eyes : "**",
+		tongue : "U "
+	},
+	"t" : {
+		eyes : "--",
+		tongue : "  "
+	},
+	"w" : {
+		eyes : "OO",
+		tongue : "  "
+	},
+	"y" : {
+		eyes : "..",
+		tongue : "  "
+	}
+};
+
+module.exports = function (options) {
+	for (var mode in modes) {
+		if (options[mode] === true) {
+			return modes[mode];
+		}
+	}
+
+	return {
+		eyes : options.e || "oo",
+		tongue : options.T || "  "
+	};
+};
+
+
+/***/ }),
+
+/***/ 6:
+/***/ ((module) => {
+
+module.exports = function (cow, variables) {
+	var eyes = escapeRe(variables.eyes);
+	var eyeL = eyes.charAt(0);
+	var eyeR = eyes.charAt(1);
+	var tongue = escapeRe(variables.tongue);
+
+	if (cow.indexOf("$the_cow") !== -1) {
+		cow = extractTheCow(cow);
+	}
+
+	return cow
+		.replace(/\$thoughts/g, variables.thoughts)
+		.replace(/\$eyes/g, eyes)
+		.replace(/\$tongue/g, tongue)
+		.replace(/\$\{eyes\}/g, eyes)
+		.replace(/\$eye/, eyeL)
+		.replace(/\$eye/, eyeR)
+		.replace(/\$\{tongue\}/g, tongue)
+	;
+};
+
+/*
+ * "$" dollar signs must be doubled before being used in a regex replace
+ * This can occur in eyes or tongue.
+ * For example:
+ *
+ * cowsay -g Moo!
+ *
+ * cowsay -e "\$\$" Moo!
+ */
+function escapeRe (s) {
+	if (s && s.replace) {
+		return s.replace(/\$/g, "$$$$");
+	}
+	return s;
+}
+
+function extractTheCow (cow) {
+	cow = cow.replace(/\r\n?|[\n\u2028\u2029]/g, "\n").replace(/^\uFEFF/, '');
+	var match = /\$the_cow\s*=\s*<<"*EOC"*;*\n([\s\S]+)\nEOC\n/.exec(cow);
+
+	if (!match) {
+		console.error("Cannot parse cow file\n", cow);
+		return cow;
+	} else {
+		return match[1].replace(/\\{2}/g, "\\").replace(/\\@/g, "@").replace(/\\\$/g, "$");
+	}
+}
+
+/***/ }),
+
+/***/ 110:
+/***/ ((module) => {
+
+"use strict";
+
+
+module.exports = () => {
+	const pattern = [
+		'[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\\u0007)',
+		'(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))'
+	].join('|');
+
+	return new RegExp(pattern, 'g');
+};
+
+
+/***/ }),
+
+/***/ 910:
+/***/ ((module) => {
+
+"use strict";
+
+/* eslint-disable yoda */
+module.exports = x => {
+	if (Number.isNaN(x)) {
+		return false;
+	}
+
+	// code points are derived from:
+	// http://www.unix.org/Public/UNIDATA/EastAsianWidth.txt
+	if (
+		x >= 0x1100 && (
+			x <= 0x115f ||  // Hangul Jamo
+			x === 0x2329 || // LEFT-POINTING ANGLE BRACKET
+			x === 0x232a || // RIGHT-POINTING ANGLE BRACKET
+			// CJK Radicals Supplement .. Enclosed CJK Letters and Months
+			(0x2e80 <= x && x <= 0x3247 && x !== 0x303f) ||
+			// Enclosed CJK Letters and Months .. CJK Unified Ideographs Extension A
+			(0x3250 <= x && x <= 0x4dbf) ||
+			// CJK Unified Ideographs .. Yi Radicals
+			(0x4e00 <= x && x <= 0xa4c6) ||
+			// Hangul Jamo Extended-A
+			(0xa960 <= x && x <= 0xa97c) ||
+			// Hangul Syllables
+			(0xac00 <= x && x <= 0xd7a3) ||
+			// CJK Compatibility Ideographs
+			(0xf900 <= x && x <= 0xfaff) ||
+			// Vertical Forms
+			(0xfe10 <= x && x <= 0xfe19) ||
+			// CJK Compatibility Forms .. Small Form Variants
+			(0xfe30 <= x && x <= 0xfe6b) ||
+			// Halfwidth and Fullwidth Forms
+			(0xff01 <= x && x <= 0xff60) ||
+			(0xffe0 <= x && x <= 0xffe6) ||
+			// Kana Supplement
+			(0x1b000 <= x && x <= 0x1b001) ||
+			// Enclosed Ideographic Supplement
+			(0x1f200 <= x && x <= 0x1f251) ||
+			// CJK Unified Ideographs Extension B .. Tertiary Ideographic Plane
+			(0x20000 <= x && x <= 0x3fffd)
+		)
+	) {
+		return true;
+	}
+
+	return false;
+};
+
+
+/***/ }),
+
+/***/ 826:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const stripAnsi = __nccwpck_require__(377);
+const isFullwidthCodePoint = __nccwpck_require__(910);
+
+module.exports = str => {
+	if (typeof str !== 'string' || str.length === 0) {
+		return 0;
+	}
+
+	str = stripAnsi(str);
+
+	let width = 0;
+
+	for (let i = 0; i < str.length; i++) {
+		const code = str.codePointAt(i);
+
+		// Ignore control characters
+		if (code <= 0x1F || (code >= 0x7F && code <= 0x9F)) {
+			continue;
+		}
+
+		// Ignore combining characters
+		if (code >= 0x300 && code <= 0x36F) {
+			continue;
+		}
+
+		// Surrogates
+		if (code > 0xFFFF) {
+			i++;
+		}
+
+		width += isFullwidthCodePoint(code) ? 2 : 1;
+	}
+
+	return width;
+};
+
+
+/***/ }),
+
+/***/ 377:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const ansiRegex = __nccwpck_require__(110);
+
+module.exports = input => typeof input === 'string' ? input.replace(ansiRegex(), '') : input;
+
+
+/***/ }),
+
 /***/ 747:
 /***/ ((module) => {
 
@@ -459,13 +903,15 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 const core = __nccwpck_require__(186);
+const cowsay = __nccwpck_require__(726);
 
-const greeting = core.getInput("greeting");
-const output = `Hello, ${greeting}!`;
+const text = core.getInput("text");
 
-core.info(output);
-
-core.setOutput("greeting", output);
+core.info(
+  cowsay.say({
+    text,
+  })
+);
 
 })();
 
