@@ -1,8 +1,10 @@
 const core = require("@actions/core");
+const cowsay = require("cowsay");
 
-const greeting = core.getInput("greeting");
-const output = `Hello, ${greeting}!`;
+const text = core.getInput("text");
 
-core.info(output);
-
-core.setOutput("greeting", output);
+core.info(
+  cowsay.say({
+    text,
+  })
+);

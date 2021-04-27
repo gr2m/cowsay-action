@@ -1,16 +1,12 @@
-name: Hello, world! (JS)
-description: "A simple GitHub Action written in JavaScript"
+name: Cowsay
+description: "The cowsay GitHub Action written in JavaScript"
 branding:
-  icon: "clipboard"
-  color: yellow
+  icon: "message-square"
+  color: purple
 inputs:
-  greeting:
-    description: "Custom media type in the Accept header"
-    required: false
-    default: "world"
-outputs:
-  greeting:
-    description: "The full greeting text"
+  text:
+    description: "Thing for cow to say"
+    required: true
 runs:
   using: "node12"
   main: "dist/index.js"
