@@ -2,12 +2,12 @@
   "name": "hello-world-js-action",
   "version": "1.0.0",
   "private": true,
-  "description": "A simple GitHub Action written in JavaScript",
+  "description": "The cowsay GitHub Action written in JavaScript",
   "main": "dist/index.js",
   "scripts": {
     "build": "ncc build index.js -o dist"
   },
-  "repository": "github:gr2m/hello-world-js-action",
+  "repository": "github:gr2m/cowsay-action",
   "keywords": [
     "github-action"
   ],
