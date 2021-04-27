@@ -2,19 +2,20 @@
   "name": "hello-world-js-action",
   "version": "1.0.0",
   "private": true,
-  "description": "A simple GitHub Action written in JavaScript",
+  "description": "The cowsay GitHub Action written in JavaScript",
   "main": "dist/index.js",
   "scripts": {
     "build": "ncc build index.js -o dist"
   },
-  "repository": "github:gr2m/hello-world-js-action",
+  "repository": "github:gr2m/cowsay-action",
   "keywords": [
     "github-action"
   ],
   "author": "Gregor Martynus (https://twitter.com/gr2m)",
   "license": "ISC",
   "dependencies": {
-    "@actions/core": "^1.2.7"
+    "@actions/core": "^1.2.7",
+    "cowsay": "^1.4.0"
   },
   "devDependencies": {
     "@semantic-release/git": "^9.0.0",
